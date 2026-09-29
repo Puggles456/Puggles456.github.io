@@ -129,14 +129,14 @@ section { padding-block: clamp(44px, 7vw, 88px); }
 
 /* other projects: datasheet rows, not cards */
 .features { display: grid; gap: clamp(20px, 3vw, 32px); }
-.projects { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0 clamp(24px, 3.5vw, 44px); margin-top: clamp(28px, 4vw, 44px); }
+.projects { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 clamp(28px, 5vw, 64px); margin-top: clamp(28px, 4vw, 44px); }
 .project { display: flex; flex-direction: column; gap: 12px; border-top: 1px solid var(--line); padding-block: 28px 32px; min-width: 0; }
 .project .kicker { margin-bottom: -4px; }
 .project > p:not(.kicker):not(.meta) { color: var(--muted); }
 .meta { display: flex; flex-wrap: wrap; gap: 4px 16px; font-size: 12px; color: var(--ink); }
 .meta span + span::before { content: "/"; margin-right: 16px; color: var(--line); }
 .project .tags { margin-top: auto; padding-top: 4px; }
-@media (max-width: 900px) { .projects { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 760px) { .projects { grid-template-columns: minmax(0, 1fr); } }
 
 /* real screenshots: three phones on a tinted stage across the top of the featured case study */
 .feature { --feature-pad: clamp(22px, 4vw, 40px); padding: var(--feature-pad); row-gap: clamp(20px, 3vw, 32px); }
@@ -278,27 +278,17 @@ section { padding-block: clamp(44px, 7vw, 88px); }
           <div class="tags" aria-label="Technologies"><span>Java</span><span>Android</span><span>CameraX</span><span>Google Maps</span><span>Flutter</span><span>Riverpod</span><span>Drift</span><span>TFLite</span></div>
         </div>
       </article>
-      <article class="feature">
-        <div class="gallery" role="group" aria-label="Screenshots from the StreamSense app">
-          <figure class="device "><img src="img/streamsense-assign.jpg" width="600" height="1170" alt="Screenshot: Filing a reading to a monitored site: a map of Minneapolis with site pins and a list of nearby river and creek sites" loading="lazy" decoding="async"><figcaption>Site assignment</figcaption></figure>
-          <figure class="device main"><img src="img/streamsense-map.jpg" width="600" height="1173" alt="Screenshot: Home map of the Minneapolis area with color-coded velocity readings at each site and a list of recent readings" loading="lazy" decoding="async"><figcaption>Home map</figcaption></figure>
-          <figure class="device "><img src="img/streamsense-reading.jpg" width="600" height="1180" alt="Screenshot: A reading of 12.93 ft/s flagged severe against the site's typical 7.50 ft/s, with annotations and site details" loading="lazy" decoding="async"><figcaption>Reading detail</figcaption></figure>
-        </div>
-        <div class="feature-main">
-          <p class="kicker">River-flow radar</p>
-          <h3>StreamSense</h3>
-          <p>A companion app for a handheld radar that measures the surface speed of rivers and stormwater channels. Field crews pull readings off the radar, file them to monitored sites, and compare each one with the site’s typical flow. I led it from the first commit to the TestFlight beta.</p>
-          <dl class="spec"><dt>Device</dt><dd>Stalker SVR handheld surface-velocity radar</dd><dt>Link</dt><dd>Bluetooth LE</dd><dt>Platforms</dt><dd>Flutter for iOS and Android</dd><dt>Role</dt><dd>Lead developer</dd><dt>Status</dt><dd>Pre-release (TestFlight beta)</dd></dl>
-        </div>
-        <div class="feature-side">
-          <h4 class="mini-head">What I built</h4>
-          <ul class="points"><li>Bluetooth device settings and live velocity charts</li><li>Monitored sites with a map picker, river-name lookup, and photo and video annotations</li><li>Offline-first storage with ordered, retry-safe sync to Azure (FastAPI and Azure SQL)</li><li>One map layer over Google Maps, Mapbox, and AMap for China, plus Chinese localization</li><li>PDF and CSV reports with map snapshots</li><li>Fixed a map animation that was overheating phones</li></ul>
-          <div class="tags" aria-label="Technologies"><span>Flutter</span><span>Riverpod</span><span>Drift</span><span>Mapbox</span><span>FastAPI</span><span>Azure</span></div>
-        </div>
-      </article>
       </div>
 
       <div class="projects">
+        <article class="project">
+          <p class="kicker">River-flow radar</p>
+          <h3>StreamSense</h3>
+          <p class="meta"><span>Lead developer</span><span>Pre-release</span></p>
+          <p>A companion app for a handheld radar that measures the surface speed of rivers and stormwater channels. I led it from the first commit to the TestFlight beta.</p>
+          <ul class="points"><li>Bluetooth device settings and live velocity charts</li><li>Monitored sites with a map picker, river-name lookup, and photo and video annotations</li><li>Offline-first storage with ordered, retry-safe sync to Azure (FastAPI and Azure SQL)</li><li>One map layer over Google Maps, Mapbox, and AMap for China, plus Chinese localization</li><li>Fixed a map animation that was overheating phones</li></ul>
+          <div class="tags" aria-label="Technologies"><span>Flutter</span><span>Riverpod</span><span>Drift</span><span>FastAPI</span><span>Azure</span></div>
+        </article>
         <article class="project">
           <p class="kicker">Roadside speed signs</p>
           <h3>Street Dynamics Device Manager</h3>
