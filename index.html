@@ -19,6 +19,7 @@
   --panel: #0e2034; --panel-edge: #1f3753; --panel-well: rgba(2, 8, 16, 0.42); --panel-text: #9db3c9;
   --led: #ffb23f; --led-off: rgba(255, 178, 63, 0.09); --led-glow: rgba(255, 178, 63, 0.5);
   --shadow: rgba(14, 32, 52, 0.22); --header-bg: rgba(243, 245, 248, 0.88);
+  --stage: #e2e9f1; --stage-deep: #d2dce7; --bezel: #0b0e13; --bezel-edge: #2c3440;
   --font-display: "Overpass", "Segoe UI", system-ui, sans-serif;
   --font-body: "Atkinson Hyperlegible", "Segoe UI", system-ui, sans-serif;
   --font-mono: "Overpass Mono", "Cascadia Mono", Consolas, ui-monospace, monospace;
@@ -30,6 +31,7 @@
     --panel: #07111d; --panel-edge: #1c3047; --panel-well: rgba(0, 0, 0, 0.35); --panel-text: #8ca4bc;
     --led: #ffb23f; --led-off: rgba(255, 178, 63, 0.08); --led-glow: rgba(255, 178, 63, 0.5);
     --shadow: rgba(0, 0, 0, 0.5); --header-bg: rgba(11, 20, 32, 0.86);
+    --stage: #0f1b2b; --stage-deep: #0a1422; --bezel: #05070a; --bezel-edge: #2a3542;
     color-scheme: dark;
   }
 }
@@ -39,6 +41,7 @@
   --panel: #07111d; --panel-edge: #1c3047; --panel-well: rgba(0, 0, 0, 0.35); --panel-text: #8ca4bc;
   --led: #ffb23f; --led-off: rgba(255, 178, 63, 0.08); --led-glow: rgba(255, 178, 63, 0.5);
   --shadow: rgba(0, 0, 0, 0.5); --header-bg: rgba(11, 20, 32, 0.86);
+  --stage: #0f1b2b; --stage-deep: #0a1422; --bezel: #05070a; --bezel-edge: #2a3542;
   color-scheme: dark;
 }
 
@@ -125,14 +128,29 @@ section { padding-block: clamp(44px, 7vw, 88px); }
 .tags span { font-family: var(--font-mono); font-size: 12px; color: var(--muted); border: 1px solid var(--line); border-radius: 4px; padding: 3px 8px; }
 
 /* other projects: datasheet rows, not cards */
-.projects { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 clamp(28px, 5vw, 64px); margin-top: clamp(28px, 4vw, 44px); }
+.features { display: grid; gap: clamp(20px, 3vw, 32px); }
+.projects { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0 clamp(24px, 3.5vw, 44px); margin-top: clamp(28px, 4vw, 44px); }
 .project { display: flex; flex-direction: column; gap: 12px; border-top: 1px solid var(--line); padding-block: 28px 32px; min-width: 0; }
 .project .kicker { margin-bottom: -4px; }
 .project > p:not(.kicker):not(.meta) { color: var(--muted); }
 .meta { display: flex; flex-wrap: wrap; gap: 4px 16px; font-size: 12px; color: var(--ink); }
 .meta span + span::before { content: "/"; margin-right: 16px; color: var(--line); }
 .project .tags { margin-top: auto; padding-top: 4px; }
-@media (max-width: 760px) { .projects { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 900px) { .projects { grid-template-columns: minmax(0, 1fr); } }
+
+/* real screenshots: three phones on a tinted stage across the top of the featured case study */
+.feature { --feature-pad: clamp(22px, 4vw, 40px); padding: var(--feature-pad); row-gap: clamp(20px, 3vw, 32px); }
+.gallery { grid-column: 1 / -1; display: flex; justify-content: center; align-items: flex-end; gap: clamp(14px, 3vw, 34px); margin: calc(-1 * var(--feature-pad)) calc(-1 * var(--feature-pad)) 0; padding: clamp(26px, 4vw, 44px) 20px clamp(18px, 3vw, 26px); background: linear-gradient(180deg, var(--stage) 0%, var(--stage-deep) 100%); border-radius: 11px 11px 0 0; }
+.device { margin: 0; display: grid; justify-items: center; gap: 12px; flex: none; }
+.device img { display: block; width: clamp(150px, 17vw, 204px); height: auto; border-radius: 22px; border: 6px solid var(--bezel); background: var(--bezel); box-shadow: 0 0 0 1px var(--bezel-edge), 0 24px 40px -22px var(--shadow); }
+.device.main img { width: clamp(172px, 20vw, 238px); }
+.device figcaption { font-family: var(--font-mono); font-size: 11.5px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+@media (max-width: 700px) {
+  .gallery { justify-content: flex-start; overflow-x: auto; scroll-snap-type: x mandatory; padding-inline: 24px; }
+  .device { scroll-snap-align: center; }
+  .device.main { order: -1; }
+  .device img, .device.main img { width: 196px; }
+}
 
 /* personal project: a real four-step sequence, so the steps are numbered */
 .side-project { margin-top: clamp(20px, 3vw, 32px); background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: clamp(22px, 4vw, 40px); }
@@ -241,7 +259,13 @@ section { padding-block: clamp(44px, 7vw, 88px); }
         <p class="section-note">Applied Concepts, Inc. (Stalker Radar)<br>Mobile Application Developer · May 2024 – present</p>
       </div>
 
+      <div class="features">
       <article class="feature">
+        <div class="gallery" role="group" aria-label="Screenshots from the Stalker Task Force app">
+          <figure class="device "><img src="img/taskforce-evidence.jpg" width="600" height="1179" alt="Screenshot: Evidence records: video thumbnails with upload status, distance, direction, and target speed" loading="lazy" decoding="async"><figcaption>Evidence records</figcaption></figure>
+          <figure class="device main"><img src="img/taskforce-display.jpg" width="600" height="1169" alt="Screenshot: An in-car radar's display mirrored live on the phone, with target and fast speeds on 7-segment readouts (street address hidden)" loading="lazy" decoding="async"><figcaption>Live radar display</figcaption></figure>
+          <figure class="device "><img src="img/taskforce-survey.jpg" width="600" height="1160" alt="Screenshot: Traffic survey summary: speed histogram, recordings classified as car or truck, and CSV and PDF export" loading="lazy" decoding="async"><figcaption>Traffic survey</figcaption></figure>
+        </div>
         <div class="feature-main">
           <p class="kicker">Police LIDAR &amp; in-car radar</p>
           <h3>Stalker Task Force</h3>
@@ -254,16 +278,27 @@ section { padding-block: clamp(44px, 7vw, 88px); }
           <div class="tags" aria-label="Technologies"><span>Java</span><span>Android</span><span>CameraX</span><span>Google Maps</span><span>Flutter</span><span>Riverpod</span><span>Drift</span><span>TFLite</span></div>
         </div>
       </article>
-
-      <div class="projects">
-        <article class="project">
+      <article class="feature">
+        <div class="gallery" role="group" aria-label="Screenshots from the StreamSense app">
+          <figure class="device "><img src="img/streamsense-assign.jpg" width="600" height="1170" alt="Screenshot: Filing a reading to a monitored site: a map of Minneapolis with site pins and a list of nearby river and creek sites" loading="lazy" decoding="async"><figcaption>Site assignment</figcaption></figure>
+          <figure class="device main"><img src="img/streamsense-map.jpg" width="600" height="1173" alt="Screenshot: Home map of the Minneapolis area with color-coded velocity readings at each site and a list of recent readings" loading="lazy" decoding="async"><figcaption>Home map</figcaption></figure>
+          <figure class="device "><img src="img/streamsense-reading.jpg" width="600" height="1180" alt="Screenshot: A reading of 12.93 ft/s flagged severe against the site's typical 7.50 ft/s, with annotations and site details" loading="lazy" decoding="async"><figcaption>Reading detail</figcaption></figure>
+        </div>
+        <div class="feature-main">
           <p class="kicker">River-flow radar</p>
           <h3>StreamSense</h3>
-          <p class="meta"><span>Lead developer</span><span>Pre-release</span></p>
-          <p>A companion app for a handheld radar that measures the surface speed of rivers and stormwater channels. I led it from the first commit to the TestFlight beta.</p>
-          <ul class="points"><li>Bluetooth device settings and live velocity charts</li><li>Offline-first storage with ordered, retry-safe sync to Azure (FastAPI and Azure SQL)</li><li>One map layer over Google Maps, Mapbox, and AMap for China, plus Chinese localization</li><li>Fixed a map animation that was overheating phones</li></ul>
-          <div class="tags" aria-label="Technologies"><span>Flutter</span><span>Riverpod</span><span>Drift</span><span>FastAPI</span><span>Azure</span></div>
-        </article>
+          <p>A companion app for a handheld radar that measures the surface speed of rivers and stormwater channels. Field crews pull readings off the radar, file them to monitored sites, and compare each one with the site’s typical flow. I led it from the first commit to the TestFlight beta.</p>
+          <dl class="spec"><dt>Device</dt><dd>Stalker SVR handheld surface-velocity radar</dd><dt>Link</dt><dd>Bluetooth LE</dd><dt>Platforms</dt><dd>Flutter for iOS and Android</dd><dt>Role</dt><dd>Lead developer</dd><dt>Status</dt><dd>Pre-release (TestFlight beta)</dd></dl>
+        </div>
+        <div class="feature-side">
+          <h4 class="mini-head">What I built</h4>
+          <ul class="points"><li>Bluetooth device settings and live velocity charts</li><li>Monitored sites with a map picker, river-name lookup, and photo and video annotations</li><li>Offline-first storage with ordered, retry-safe sync to Azure (FastAPI and Azure SQL)</li><li>One map layer over Google Maps, Mapbox, and AMap for China, plus Chinese localization</li><li>PDF and CSV reports with map snapshots</li><li>Fixed a map animation that was overheating phones</li></ul>
+          <div class="tags" aria-label="Technologies"><span>Flutter</span><span>Riverpod</span><span>Drift</span><span>Mapbox</span><span>FastAPI</span><span>Azure</span></div>
+        </div>
+      </article>
+      </div>
+
+      <div class="projects">
         <article class="project">
           <p class="kicker">Roadside speed signs</p>
           <h3>Street Dynamics Device Manager</h3>
