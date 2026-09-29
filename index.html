@@ -1,0 +1,386 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Benjamin Farmer</title>
+<meta name="description" content="Mobile software engineer building Flutter and Android apps that control Bluetooth radar, LIDAR, and speed-sign hardware.">
+<meta property="og:title" content="Benjamin Farmer">
+<meta property="og:description" content="Mobile software engineer building Flutter and Android apps that control Bluetooth radar, LIDAR, and speed-sign hardware.">
+<meta property="og:type" content="website">
+<meta name="theme-color" content="#0e2034">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Overpass:wght@600;800&family=Overpass+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: highway-sign type (Overpass) on a quiet grid of rules and datasheet rows; the one bold moment is the amber 7-segment readout in the hero, borrowed from the radar displays these apps talk to. */
+:root {
+  --bg: #f3f5f8; --surface: #ffffff; --ink: #122036; --muted: #526277; --line: #d6dee8;
+  --accent: #1d6bb0; --accent-soft: #e2edf8; --on-accent: #ffffff;
+  --panel: #0e2034; --panel-edge: #1f3753; --panel-well: rgba(2, 8, 16, 0.42); --panel-text: #9db3c9;
+  --led: #ffb23f; --led-off: rgba(255, 178, 63, 0.09); --led-glow: rgba(255, 178, 63, 0.5);
+  --shadow: rgba(14, 32, 52, 0.22); --header-bg: rgba(243, 245, 248, 0.88);
+  --font-display: "Overpass", "Segoe UI", system-ui, sans-serif;
+  --font-body: "Atkinson Hyperlegible", "Segoe UI", system-ui, sans-serif;
+  --font-mono: "Overpass Mono", "Cascadia Mono", Consolas, ui-monospace, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0b1420; --surface: #111c2c; --ink: #e4ebf3; --muted: #98a8ba; --line: #22344a;
+    --accent: #6cb1ee; --accent-soft: #14273c; --on-accent: #08121d;
+    --panel: #07111d; --panel-edge: #1c3047; --panel-well: rgba(0, 0, 0, 0.35); --panel-text: #8ca4bc;
+    --led: #ffb23f; --led-off: rgba(255, 178, 63, 0.08); --led-glow: rgba(255, 178, 63, 0.5);
+    --shadow: rgba(0, 0, 0, 0.5); --header-bg: rgba(11, 20, 32, 0.86);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0b1420; --surface: #111c2c; --ink: #e4ebf3; --muted: #98a8ba; --line: #22344a;
+  --accent: #6cb1ee; --accent-soft: #14273c; --on-accent: #08121d;
+  --panel: #07111d; --panel-edge: #1c3047; --panel-well: rgba(0, 0, 0, 0.35); --panel-text: #8ca4bc;
+  --led: #ffb23f; --led-off: rgba(255, 178, 63, 0.08); --led-glow: rgba(255, 178, 63, 0.5);
+  --shadow: rgba(0, 0, 0, 0.5); --header-bg: rgba(11, 20, 32, 0.86);
+  color-scheme: dark;
+}
+
+html { scroll-behavior: smooth; scroll-padding-top: 76px; }
+body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--font-body); font-size: 17px; line-height: 1.6; -webkit-font-smoothing: antialiased; }
+.wrap { max-width: 1120px; margin-inline: auto; padding-inline: clamp(16px, 4vw, 40px); }
+a { color: var(--accent); }
+a:focus-visible, button:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; border-radius: 4px; }
+p { margin: 0; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.skip { position: absolute; left: 16px; top: -48px; z-index: 20; background: var(--accent); color: var(--on-accent); padding: 8px 14px; border-radius: 6px; font-weight: 700; text-decoration: none; }
+.skip:focus { top: calc(env(safe-area-inset-top, 0px) + 8px); }
+
+/* header */
+.site-header { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 10; background: var(--header-bg); backdrop-filter: saturate(1.4) blur(10px); -webkit-backdrop-filter: saturate(1.4) blur(10px); border-bottom: 1px solid var(--line); }
+.bar { display: flex; align-items: center; gap: clamp(12px, 3vw, 28px); min-height: 60px; }
+.mark { font-family: var(--font-display); font-weight: 800; font-size: 21px; letter-spacing: -0.03em; color: var(--ink); text-decoration: none; }
+.mark span { color: var(--accent); }
+nav { margin-left: auto; }
+nav ul { display: flex; gap: clamp(14px, 3vw, 26px); list-style: none; margin: 0; padding: 0; }
+nav a { color: var(--muted); text-decoration: none; font-family: var(--font-mono); font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase; }
+nav a:hover { color: var(--ink); }
+.theme-btn { font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink); background: transparent; border: 1px solid var(--line); border-radius: 6px; padding: 6px 10px; cursor: pointer; }
+.theme-btn:hover { border-color: var(--muted); }
+@media (max-width: 560px) { .wide-only { display: none; } }
+
+/* type */
+h1, h2, h3, h4 { font-family: var(--font-display); font-weight: 800; letter-spacing: -0.02em; line-height: 1.08; margin: 0; text-wrap: balance; color: var(--ink); }
+h1 { font-size: clamp(2.8rem, 7.4vw, 5.5rem); line-height: 0.94; letter-spacing: -0.04em; }
+h2 { font-size: clamp(1.9rem, 4.2vw, 2.8rem); }
+h3 { font-size: clamp(1.35rem, 2.4vw, 1.7rem); }
+h4 { font-size: 1.1rem; letter-spacing: -0.01em; }
+.eyebrow, .kicker, .section-note, .meta, .step, .mini-head, .wlabel, .readout-head, .spec dt, .skill-group h3 { font-family: var(--font-mono); letter-spacing: 0.08em; text-transform: uppercase; }
+.eyebrow { font-size: 13px; color: var(--accent); margin-bottom: 18px; }
+.kicker { font-size: 12.5px; color: var(--accent); margin-bottom: 8px; }
+
+/* hero */
+.hero { padding-block: clamp(44px, 8vw, 100px) clamp(40px, 6vw, 72px); }
+.hero-grid { display: grid; grid-template-columns: minmax(0, 1.12fr) minmax(0, 0.88fr); gap: clamp(32px, 5vw, 64px); align-items: center; }
+.hero-copy { min-width: 0; }
+.lede { font-size: clamp(1.06rem, 1.55vw, 1.24rem); color: var(--muted); max-width: 36em; margin-top: 24px; }
+.cta { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 30px; }
+.btn { display: inline-flex; align-items: center; gap: 8px; padding: 11px 18px; border-radius: 6px; border: 1.5px solid var(--ink); color: var(--ink); background: transparent; font-family: var(--font-display); font-weight: 800; font-size: 15px; letter-spacing: -0.005em; text-decoration: none; cursor: pointer; transition: transform 0.15s ease, background-color 0.15s ease; }
+.btn:hover { transform: translateY(-1px); }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+.btn.small { padding: 7px 12px; font-size: 13.5px; }
+@media (max-width: 860px) { .hero-grid { grid-template-columns: minmax(0, 1fr); } }
+
+/* the readout: the page's one bold moment */
+.readout { margin: 0; background: var(--panel); border: 1px solid var(--panel-edge); border-radius: 12px; padding: 16px 18px 18px; color: var(--panel-text); box-shadow: 0 30px 60px -34px var(--shadow); }
+.readout-head { display: flex; justify-content: space-between; align-items: center; font-size: 11.5px; }
+.lock { display: inline-flex; align-items: center; gap: 7px; color: var(--led); }
+.lock::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--led); box-shadow: 0 0 10px var(--led-glow); animation: pulse 2.6s ease-in-out infinite; }
+@keyframes pulse { 50% { opacity: 0.35; } }
+.readout-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 14px; }
+.window { background: var(--panel-well); border-radius: 7px; padding: 14px 14px 12px; min-width: 0; }
+.digits { display: flex; align-items: flex-end; gap: 5px; height: clamp(40px, 5vw, 54px); }
+.seg { height: 100%; width: auto; max-width: 100%; overflow: visible; filter: drop-shadow(0 0 6px var(--led-glow)); }
+.seg .on { fill: var(--led); }
+.seg .off { fill: var(--led-off); }
+.suffix { font-family: var(--font-mono); font-weight: 600; font-size: clamp(18px, 2vw, 22px); line-height: 1; color: var(--led); padding-bottom: 1px; }
+.wlabel { font-size: 11px; line-height: 1.4; margin-top: 10px; }
+
+/* sections */
+section { padding-block: clamp(44px, 7vw, 88px); }
+.work { padding-top: clamp(24px, 4vw, 40px); }
+.section-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 12px 24px; border-bottom: 2px solid var(--ink); padding-bottom: 14px; margin-bottom: clamp(24px, 4vw, 40px); }
+.section-note { font-size: 12.5px; color: var(--muted); text-align: right; line-height: 1.55; }
+@media (max-width: 560px) { .section-note { text-align: left; } }
+
+/* featured project */
+.feature { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: clamp(24px, 4vw, 56px); background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: clamp(22px, 4vw, 40px); }
+.feature-main > p:not(.kicker) { color: var(--muted); margin-top: 12px; }
+.spec { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 8px 18px; margin: 24px 0 0; padding-top: 18px; border-top: 1px dashed var(--line); font-size: 15px; }
+.spec dt { font-size: 11.5px; color: var(--muted); padding-top: 3px; }
+.spec dd { margin: 0; }
+.mini-head { font-size: 12px; color: var(--muted); margin-bottom: 14px; font-weight: 600; }
+@media (max-width: 860px) { .feature { grid-template-columns: minmax(0, 1fr); } }
+
+.points { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.points li { display: grid; grid-template-columns: 12px minmax(0, 1fr); gap: 10px; font-size: 16px; }
+.points li::before { content: ""; width: 7px; height: 7px; margin-top: 0.62em; background: var(--accent); transform: rotate(45deg); }
+.tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 20px; }
+.tags span { font-family: var(--font-mono); font-size: 12px; color: var(--muted); border: 1px solid var(--line); border-radius: 4px; padding: 3px 8px; }
+
+/* other projects: datasheet rows, not cards */
+.projects { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 clamp(28px, 5vw, 64px); margin-top: clamp(28px, 4vw, 44px); }
+.project { display: flex; flex-direction: column; gap: 12px; border-top: 1px solid var(--line); padding-block: 28px 32px; min-width: 0; }
+.project .kicker { margin-bottom: -4px; }
+.project > p:not(.kicker):not(.meta) { color: var(--muted); }
+.meta { display: flex; flex-wrap: wrap; gap: 4px 16px; font-size: 12px; color: var(--ink); }
+.meta span + span::before { content: "/"; margin-right: 16px; color: var(--line); }
+.project .tags { margin-top: auto; padding-top: 4px; }
+@media (max-width: 760px) { .projects { grid-template-columns: minmax(0, 1fr); } }
+
+/* personal project: a real four-step sequence, so the steps are numbered */
+.side-project { margin-top: clamp(20px, 3vw, 32px); background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: clamp(22px, 4vw, 40px); }
+.side-head { display: grid; grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr); gap: 16px 40px; align-items: end; }
+.side-summary { color: var(--muted); }
+.pipeline { list-style: none; margin: 32px 0 0; padding: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 20px; }
+.pipeline li { position: relative; border-top: 3px solid var(--accent); padding-top: 16px; min-width: 0; }
+.pipeline li:not(:last-child)::after { content: ""; position: absolute; top: -9.5px; right: -12px; border: 8px solid transparent; border-left: 10px solid var(--accent); border-right: 0; }
+.step { font-size: 11.5px; color: var(--accent); }
+.pipeline h4 { margin: 6px 0 8px; }
+.pipeline p { font-size: 15px; color: var(--muted); }
+@media (max-width: 900px) { .side-head { grid-template-columns: minmax(0, 1fr); } .pipeline { grid-template-columns: repeat(2, minmax(0, 1fr)); } .pipeline li::after { display: none; } }
+@media (max-width: 520px) { .pipeline { grid-template-columns: minmax(0, 1fr); } }
+
+/* skills */
+.skills { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 28px clamp(20px, 3vw, 40px); }
+.skill-group h3 { font-size: 12.5px; letter-spacing: 0.1em; color: var(--accent); font-weight: 600; margin-bottom: 12px; }
+.skill-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; font-size: 16px; }
+.skill-list li { padding-bottom: 6px; border-bottom: 1px solid var(--line); }
+@media (max-width: 900px) { .skills { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 520px) { .skills { grid-template-columns: minmax(0, 1fr); } }
+
+/* about + contact */
+.about { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 0.75fr); gap: clamp(32px, 6vw, 80px); align-items: start; }
+.about p + p { margin-top: 16px; }
+.about > div > p { max-width: 38em; }
+.contact { background: var(--surface); border: 1px solid var(--line); border-top: 4px solid var(--accent); border-radius: 12px; padding: 26px; }
+.contact h2 { font-size: 1.7rem; margin-bottom: 8px; }
+.contact > p { color: var(--muted); }
+.email-row { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; margin-top: 16px; }
+.email { font-family: var(--font-mono); font-size: 15px; color: var(--ink); word-break: break-all; }
+.copy-status { font-family: var(--font-mono); font-size: 12.5px; color: var(--accent); min-height: 1.4em; margin-top: 6px; }
+.links { list-style: none; margin: 12px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 10px 20px; }
+.links a { font-family: var(--font-display); font-weight: 800; text-decoration: none; }
+.links a:hover { text-decoration: underline; }
+.where { font-family: var(--font-mono); font-size: 12.5px; color: var(--muted); margin-top: 18px; }
+@media (max-width: 820px) { .about { grid-template-columns: minmax(0, 1fr); } }
+
+.site-footer { border-top: 1px solid var(--line); padding-block: 26px; font-family: var(--font-mono); font-size: 12.5px; color: var(--muted); }
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}
+</style>
+</head>
+<body>
+
+<a class="skip" href="#work">Skip to work</a>
+<header class="site-header">
+  <div class="wrap bar">
+    <a class="mark" href="#top" aria-label="Benjamin Farmer, back to top">B<span>F</span></a>
+    <nav aria-label="Sections">
+      <ul>
+        <li><a href="#work">Work</a></li>
+        <li class="wide-only"><a href="#skills">Skills</a></li>
+        <li class="wide-only"><a href="#about">About</a></li>
+        <li><a href="#contact">Contact</a></li>
+      </ul>
+    </nav>
+    <button class="theme-btn" id="theme-toggle" type="button" aria-label="Switch theme">Theme</button>
+  </div>
+</header>
+
+<main id="top">
+  <section class="hero">
+    <div class="wrap hero-grid">
+      <div class="hero-copy">
+        <p class="eyebrow">Mobile software engineer · Dallas–Fort Worth</p>
+        <h1>Benjamin Farmer</h1>
+        <p class="lede">I build Flutter and Android apps that control real hardware over Bluetooth: police LIDAR and radar, roadside speed signs, sports radar guns, and river-flow sensors. My work runs from the device protocol to the cloud.</p>
+        <div class="cta">
+          <a class="btn primary" href="#work">See my work</a>
+          <a class="btn" href="#contact">Get in touch</a>
+          <a class="btn" href="resume.pdf">Résumé (PDF)</a>
+        </div>
+      </div>
+      <figure class="readout" aria-label="Career numbers">
+        <figcaption class="readout-head"><span>By the numbers</span><span class="lock">Lock</span></figcaption>
+        <div class="readout-grid">
+          <div class="window">
+            <div class="digits"><svg class="seg" viewBox="-1 -1 100 74" aria-hidden="true" focusable="false"><g transform="translate(8 0) skewX(-6)"><polygon class="on" points="5.6,4 9.6,0 30.4,0 34.4,4 30.4,8 9.6,8"/><polygon class="on" points="36,5.6 40,9.6 40,30.4 36,34.4 32,30.4 32,9.6"/><polygon class="off" points="36,37.6 40,41.6 40,62.4 36,66.4 32,62.4 32,41.6"/><polygon class="on" points="5.6,68 9.6,64 30.4,64 34.4,68 30.4,72 9.6,72"/><polygon class="on" points="4,37.6 8,41.6 8,62.4 4,66.4 0,62.4 0,41.6"/><polygon class="off" points="4,5.6 8,9.6 8,30.4 4,34.4 0,30.4 0,9.6"/><polygon class="on" points="5.6,36 9.6,32 30.4,32 34.4,36 30.4,40 9.6,40"/></g><g transform="translate(58 0) skewX(-6)"><polygon class="on" points="5.6,4 9.6,0 30.4,0 34.4,4 30.4,8 9.6,8"/><polygon class="off" points="36,5.6 40,9.6 40,30.4 36,34.4 32,30.4 32,9.6"/><polygon class="on" points="36,37.6 40,41.6 40,62.4 36,66.4 32,62.4 32,41.6"/><polygon class="on" points="5.6,68 9.6,64 30.4,64 34.4,68 30.4,72 9.6,72"/><polygon class="off" points="4,37.6 8,41.6 8,62.4 4,66.4 0,62.4 0,41.6"/><polygon class="on" points="4,5.6 8,9.6 8,30.4 4,34.4 0,30.4 0,9.6"/><polygon class="on" points="5.6,36 9.6,32 30.4,32 34.4,36 30.4,40 9.6,40"/></g></svg><span class="sr-only">25</span></div>
+            <div class="wlabel">Android releases shipped</div>
+          </div>
+          <div class="window">
+            <div class="digits"><svg class="seg" viewBox="-1 -1 200 74" aria-hidden="true" focusable="false"><g transform="translate(8 0) skewX(-6)"><polygon class="off" points="5.6,4 9.6,0 30.4,0 34.4,4 30.4,8 9.6,8"/><polygon class="on" points="36,5.6 40,9.6 40,30.4 36,34.4 32,30.4 32,9.6"/><polygon class="on" points="36,37.6 40,41.6 40,62.4 36,66.4 32,62.4 32,41.6"/><polygon class="off" points="5.6,68 9.6,64 30.4,64 34.4,68 30.4,72 9.6,72"/><polygon class="off" points="4,37.6 8,41.6 8,62.4 4,66.4 0,62.4 0,41.6"/><polygon class="off" points="4,5.6 8,9.6 8,30.4 4,34.4 0,30.4 0,9.6"/><polygon class="off" points="5.6,36 9.6,32 30.4,32 34.4,36 30.4,40 9.6,40"/></g><g transform="translate(58 0) skewX(-6)"><polygon class="off" points="5.6,4 9.6,0 30.4,0 34.4,4 30.4,8 9.6,8"/><polygon class="on" points="36,5.6 40,9.6 40,30.4 36,34.4 32,30.4 32,9.6"/><polygon class="on" points="36,37.6 40,41.6 40,62.4 36,66.4 32,62.4 32,41.6"/><polygon class="off" points="5.6,68 9.6,64 30.4,64 34.4,68 30.4,72 9.6,72"/><polygon class="off" points="4,37.6 8,41.6 8,62.4 4,66.4 0,62.4 0,41.6"/><polygon class="off" points="4,5.6 8,9.6 8,30.4 4,34.4 0,30.4 0,9.6"/><polygon class="off" points="5.6,36 9.6,32 30.4,32 34.4,36 30.4,40 9.6,40"/></g><g transform="translate(108 0) skewX(-6)"><polygon class="on" points="5.6,4 9.6,0 30.4,0 34.4,4 30.4,8 9.6,8"/><polygon class="on" points="36,5.6 40,9.6 40,30.4 36,34.4 32,30.4 32,9.6"/><polygon class="on" points="36,37.6 40,41.6 40,62.4 36,66.4 32,62.4 32,41.6"/><polygon class="on" points="5.6,68 9.6,64 30.4,64 34.4,68 30.4,72 9.6,72"/><polygon class="on" points="4,37.6 8,41.6 8,62.4 4,66.4 0,62.4 0,41.6"/><polygon class="on" points="4,5.6 8,9.6 8,30.4 4,34.4 0,30.4 0,9.6"/><polygon class="off" points="5.6,36 9.6,32 30.4,32 34.4,36 30.4,40 9.6,40"/></g><g transform="translate(158 0) skewX(-6)"><polygon class="on" points="5.6,4 9.6,0 30.4,0 34.4,4 30.4,8 9.6,8"/><polygon class="on" points="36,5.6 40,9.6 40,30.4 36,34.4 32,30.4 32,9.6"/><polygon class="on" points="36,37.6 40,41.6 40,62.4 36,66.4 32,62.4 32,41.6"/><polygon class="on" points="5.6,68 9.6,64 30.4,64 34.4,68 30.4,72 9.6,72"/><polygon class="on" points="4,37.6 8,41.6 8,62.4 4,66.4 0,62.4 0,41.6"/><polygon class="on" points="4,5.6 8,9.6 8,30.4 4,34.4 0,30.4 0,9.6"/><polygon class="off" points="5.6,36 9.6,32 30.4,32 34.4,36 30.4,40 9.6,40"/></g></svg><span class="suffix">+</span><span class="sr-only">1,100+</span></div>
+            <div class="wlabel">automated tests written</div>
+          </div>
+          <div class="window">
+            <div class="digits"><svg class="seg" viewBox="-1 -1 50 74" aria-hidden="true" focusable="false"><g transform="translate(8 0) skewX(-6)"><polygon class="on" points="5.6,4 9.6,0 30.4,0 34.4,4 30.4,8 9.6,8"/><polygon class="on" points="36,5.6 40,9.6 40,30.4 36,34.4 32,30.4 32,9.6"/><polygon class="on" points="36,37.6 40,41.6 40,62.4 36,66.4 32,62.4 32,41.6"/><polygon class="on" points="5.6,68 9.6,64 30.4,64 34.4,68 30.4,72 9.6,72"/><polygon class="off" points="4,37.6 8,41.6 8,62.4 4,66.4 0,62.4 0,41.6"/><polygon class="off" points="4,5.6 8,9.6 8,30.4 4,34.4 0,30.4 0,9.6"/><polygon class="on" points="5.6,36 9.6,32 30.4,32 34.4,36 30.4,40 9.6,40"/></g></svg><span class="suffix">K</span><span class="sr-only">3K</span></div>
+            <div class="wlabel">monthly users, Stalker Sport</div>
+          </div>
+          <div class="window">
+            <div class="digits"><svg class="seg" viewBox="-1 -1 50 74" aria-hidden="true" focusable="false"><g transform="translate(8 0) skewX(-6)"><polygon class="on" points="5.6,4 9.6,0 30.4,0 34.4,4 30.4,8 9.6,8"/><polygon class="off" points="36,5.6 40,9.6 40,30.4 36,34.4 32,30.4 32,9.6"/><polygon class="on" points="36,37.6 40,41.6 40,62.4 36,66.4 32,62.4 32,41.6"/><polygon class="on" points="5.6,68 9.6,64 30.4,64 34.4,68 30.4,72 9.6,72"/><polygon class="off" points="4,37.6 8,41.6 8,62.4 4,66.4 0,62.4 0,41.6"/><polygon class="on" points="4,5.6 8,9.6 8,30.4 4,34.4 0,30.4 0,9.6"/><polygon class="on" points="5.6,36 9.6,32 30.4,32 34.4,36 30.4,40 9.6,40"/></g></svg><span class="sr-only">5</span></div>
+            <div class="wlabel">hardware-connected apps</div>
+          </div>
+        </div>
+      </figure>
+    </div>
+  </section>
+
+  <section id="work" class="work">
+    <div class="wrap">
+      <div class="section-head">
+        <h2>Selected work</h2>
+        <p class="section-note">Applied Concepts, Inc. (Stalker Radar)<br>Mobile Application Developer · May 2024 – present</p>
+      </div>
+
+      <article class="feature">
+        <div class="feature-main">
+          <p class="kicker">Police LIDAR &amp; in-car radar</p>
+          <h3>Stalker Task Force</h3>
+          <p>Officers use the app to set up their radar, mirror its display on the phone, record evidence, and share enforcement events with nearby units. I was the sole Android developer for 18 months, shipping 25 releases, and I now co-lead the cross-platform rewrite in Flutter.</p>
+          <dl class="spec"><dt>Devices</dt><dd>Stalker LIDAR guns and in-car radars</dd><dt>Link</dt><dd>Bluetooth LE and Bluetooth Classic</dd><dt>Platforms</dt><dd>Android (Java), moving to Flutter for Android and iOS</dd><dt>Role</dt><dd>Sole Android developer; co-lead of the Flutter rewrite</dd><dt>In use</dt><dd>Police agencies in states including Ohio and Alaska</dd></dl>
+        </div>
+        <div class="feature-side">
+          <h4 class="mini-head">What I built</h4>
+          <ul class="points"><li>Bluetooth control of in-car radars: live screen mirroring, settings sync, and encrypted commands</li><li>LIDAR-triggered evidence video with speed and distance burned into each frame, rebuilt in Flutter</li><li>An offline upload queue for evidence and a live event map that officers can join</li><li>On-device YOLOv8n vehicle detection for fixed-mount traffic surveys</li><li>Reproduced a radar firmware deadlock by compiling the firmware’s C code to WebAssembly</li><li>877 automated tests written for the Flutter rewrite</li></ul>
+          <div class="tags" aria-label="Technologies"><span>Java</span><span>Android</span><span>CameraX</span><span>Google Maps</span><span>Flutter</span><span>Riverpod</span><span>Drift</span><span>TFLite</span></div>
+        </div>
+      </article>
+
+      <div class="projects">
+        <article class="project">
+          <p class="kicker">River-flow radar</p>
+          <h3>StreamSense</h3>
+          <p class="meta"><span>Lead developer</span><span>Pre-release</span></p>
+          <p>A companion app for a handheld radar that measures the surface speed of rivers and stormwater channels. I led it from the first commit to the TestFlight beta.</p>
+          <ul class="points"><li>Bluetooth device settings and live velocity charts</li><li>Offline-first storage with ordered, retry-safe sync to Azure (FastAPI and Azure SQL)</li><li>One map layer over Google Maps, Mapbox, and AMap for China, plus Chinese localization</li><li>Fixed a map animation that was overheating phones</li></ul>
+          <div class="tags" aria-label="Technologies"><span>Flutter</span><span>Riverpod</span><span>Drift</span><span>FastAPI</span><span>Azure</span></div>
+        </article>
+        <article class="project">
+          <p class="kicker">Roadside speed signs</p>
+          <h3>Street Dynamics Device Manager</h3>
+          <p class="meta"><span>Co-developer</span><span>Co-project manager</span></p>
+          <p>Field technicians use it to configure LED speed signs and traffic sensors over Bluetooth, set schedules, and pull traffic data. It supports 11 device types.</p>
+          <ul class="points"><li>App support for a new sign model, including school-zone scheduling</li><li>Traffic-data downloads sped up from about 35 to about 2,000 records per second</li><li>An Arduino sign simulator for testing firmware updates without hardware</li><li>Wrote most of the app’s automated tests</li></ul>
+          <div class="tags" aria-label="Technologies"><span>Flutter</span><span>Bluetooth LE</span><span>Arduino</span></div>
+        </article>
+        <article class="project">
+          <p class="kicker">Sports radar</p>
+          <h3>Stalker Sport</h3>
+          <p class="meta"><span>Co-developer</span><span>About 3,000 monthly users</span></p>
+          <p>Players and coaches pair Stalker radar guns to record ball speed alongside video. The app offers paid subscriptions on iOS and Android.</p>
+          <ul class="points"><li>Shipped Android slow-motion video through a native Kotlin Camera2 plugin</li><li>Built the app’s first Bluetooth layer, pitch-type tagging, and tablet layouts</li></ul>
+          <div class="tags" aria-label="Technologies"><span>Flutter</span><span>Kotlin</span><span>Camera2</span></div>
+        </article>
+        <article class="project">
+          <p class="kicker">Fleet management</p>
+          <h3>Street Dynamics Portal</h3>
+          <p class="meta"><span>Primary developer since mid-2025</span></p>
+          <p>A cloud app for managing fleets of speed signs: map and list views, live traffic stats, sign content, and remote commands.</p>
+          <ul class="points"><li>Added support for four new sign models and fleet-wide power monitoring</li><li>Fixed device-switching race conditions with request cancellation</li></ul>
+          <div class="tags" aria-label="Technologies"><span>React Native</span><span>TypeScript</span><span>Azure</span></div>
+        </article>
+      </div>
+
+      <article class="side-project" aria-labelledby="scanner-title">
+        <div class="side-head">
+          <div>
+            <p class="kicker">Personal project · 2026</p>
+            <h3 id="scanner-title">3D Room Scanner</h3>
+          </div>
+          <p class="side-summary">A two-person proof of concept for retail spaces. Record a walkthrough video of a room on your phone, and the backend turns it into a navigable, photographic 3D model using Gaussian splatting.</p>
+        </div>
+        <ol class="pipeline">
+          <li><span class="step">Step 1</span><h4>Capture</h4><p>Flutter app with native Camera2 and AVFoundation capture, experimental ARCore tracking, and checks for sharpness, exposure, and motion.</p></li>
+          <li><span class="step">Step 2</span><h4>Upload</h4><p>Firebase Auth, Storage, and Firestore, with TypeScript Cloud Functions queuing each job.</p></li>
+          <li><span class="step">Step 3</span><h4>Reconstruct</h4><p>A Python GPU worker (PyTorch, CUDA) selects frames with OpenCV, recovers camera positions with COLMAP, and trains the splat with Faster-GS.</p></li>
+          <li><span class="step">Step 4</span><h4>Review</h4><p>A web dashboard tracks progress and reprojection error, and serves PLY or compressed SPZ files.</p></li>
+        </ol>
+        <div class="tags" aria-label="Technologies"><span>Flutter</span><span>Firebase</span><span>TypeScript</span><span>Python</span><span>CUDA</span><span>COLMAP</span><span>OpenCV</span></div>
+      </article>
+    </div>
+  </section>
+
+  <section id="skills" class="skills-sec">
+    <div class="wrap">
+      <div class="section-head"><h2>Skills</h2><p class="section-note">Tools: Git, Android Studio, Xcode, Claude Code</p></div>
+      <div class="skills">
+        <div class="skill-group"><h3>Mobile</h3><ul class="skill-list"><li>Flutter and Dart</li><li>Riverpod, Bloc</li><li>Android: Java, Kotlin</li><li>Jetpack Compose</li><li>React Native, TypeScript</li><li>Drift / SQLite</li></ul></div>
+        <div class="skill-group"><h3>Hardware</h3><ul class="skill-list"><li>Bluetooth LE (GATT, MTU)</li><li>Bluetooth Classic (RFCOMM)</li><li>Binary and JSON device protocols</li><li>OTA firmware updates</li><li>Arduino and nRF52840 test rigs</li><li>Reading firmware C source</li></ul></div>
+        <div class="skill-group"><h3>Cloud &amp; data</h3><ul class="skill-list"><li>Azure (App Service, SQL, Blob)</li><li>Firebase (Auth, Firestore, Functions)</li><li>Google Cloud</li><li>FastAPI, Node.js</li><li>REST APIs</li><li>SQL</li></ul></div>
+        <div class="skill-group"><h3>Vision &amp; 3D</h3><ul class="skill-list"><li>TFLite (YOLOv8n)</li><li>OpenCV</li><li>PyTorch and CUDA</li><li>COLMAP</li><li>Gaussian splatting</li><li>ARCore</li></ul></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="about" class="about-sec">
+    <div class="wrap about">
+      <div>
+        <div class="section-head"><h2>About</h2></div>
+        <p>I’m a mobile engineer at Applied Concepts (Stalker Radar) in Richardson, Texas. Since May 2024 I’ve built five apps across four product lines, working with firmware and QA engineers to take each one from device protocol to release.</p>
+        <p>Most of my work sits where software meets hardware: reading firmware source to integrate a new device, building Arduino test rigs when the real hardware isn’t available, and tracing bugs down to the protocol.</p>
+        <p>I graduated from the University of Texas at Arlington with a B.S. in Software Engineering in 2023.</p>
+      </div>
+      <aside id="contact" class="contact" aria-labelledby="contact-title">
+        <h2 id="contact-title">Contact</h2>
+        <p>Email is the fastest way to reach me.</p>
+        <div class="email-row">
+          <a id="email-address" class="email" href="mailto:benfarm17@gmail.com">benfarm17@gmail.com</a>
+          <button id="copy-email" class="btn small" type="button">Copy email</button>
+        </div>
+        <p id="copy-status" class="copy-status" role="status" aria-live="polite"></p>
+        <ul class="links">
+          <li><a href="https://www.linkedin.com/in/benjamin-farmer-68012b240/" target="_blank" rel="noopener">LinkedIn ↗</a></li>
+          <li><a href="https://github.com/Puggles456" target="_blank" rel="noopener">GitHub ↗</a></li>
+          <li><a href="resume.pdf">Résumé (PDF)</a></li>
+        </ul>
+        <p class="where">Dallas–Fort Worth, Texas</p>
+      </aside>
+    </div>
+  </section>
+</main>
+
+<footer class="site-footer"><div class="wrap">© 2026 Benjamin Farmer</div></footer>
+
+<script>
+(function () {
+  var root = document.documentElement;
+  var btn = document.getElementById("theme-toggle");
+  function effective() { return root.getAttribute("data-theme") || (window.matchMedia && matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"); }
+  function label() { var dark = effective() === "dark"; btn.textContent = dark ? "Light" : "Dark"; btn.setAttribute("aria-label", dark ? "Switch to light theme" : "Switch to dark theme"); }
+  try { var saved = localStorage.getItem("bf-theme"); if (saved === "light" || saved === "dark") root.setAttribute("data-theme", saved); } catch (e) {}
+  label();
+  if (window.matchMedia) { try { matchMedia("(prefers-color-scheme: dark)").addEventListener("change", label); } catch (e) {} }
+  btn.addEventListener("click", function () {
+    var next = effective() === "dark" ? "light" : "dark";
+    root.setAttribute("data-theme", next);
+    try { localStorage.setItem("bf-theme", next); } catch (e) {}
+    label();
+  });
+
+  var copy = document.getElementById("copy-email");
+  var status = document.getElementById("copy-status");
+  var address = document.getElementById("email-address");
+  copy.addEventListener("click", function () {
+    var text = address.textContent;
+    function selectIt() {
+      var range = document.createRange(); range.selectNodeContents(address);
+      var sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(range);
+      status.textContent = "Selected. Press Ctrl+C (or Cmd+C) to copy.";
+    }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(function () { status.textContent = "Copied " + text; }, selectIt);
+    } else { selectIt(); }
+  });
+})();
+</script>
+</body>
+</html>
